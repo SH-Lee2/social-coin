@@ -73,15 +73,15 @@ const Community = ({
         firestore()
             .collection("user")
             .doc(user.uid)
-            .get()
-            .then((user) => setUserData(user.data()));
+            .onSnapshot((snapshot) => {
+                setUserData(snapshot.data());
+            });
     }, []);
 
-    useEffect(async () => {
-        await firestore()
+    useEffect(() => {
+        firestore()
             .collection(id)
             .orderBy("createAd", "desc")
-
             .onSnapshot((snapshot) => {
                 setPosts(snapshot.docs.map((doc) => doc.data()));
             });
@@ -114,6 +114,7 @@ const Community = ({
                             : "https://lh5.googleusercontent.com/-b0PKyNuQv5s/AAAAAAAAAAI/AAAAAAAAAAA/AMZuuclxAM4M1SCBGAO7Rp-QP6zgBEUkOQ/s96-c/photo.jpg",
                     }}
                 />
+
                 <CommentText>{userData.user_name} 으로 의견 남기기</CommentText>
             </Wrapper>
         </Container>

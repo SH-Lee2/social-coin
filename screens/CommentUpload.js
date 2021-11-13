@@ -33,10 +33,15 @@ const CommentUpload = ({
                 owner_profile_picture: userData.profile_picture,
                 like: null,
                 comments: null,
+                coin_id: id,
                 createAd: Date.now(),
             })
             .then((data) => {
                 console.log("User added!");
+                firestore()
+                    .collection(id)
+                    .doc(data.id)
+                    .update({ opnion_id: data.id });
                 onAddUserComment(data.id);
             });
     };
@@ -44,8 +49,9 @@ const CommentUpload = ({
         firestore()
             .collection("user")
             .doc(user.uid)
-            .collection("comments")
-            .add({
+            .collection("opnions")
+            .doc(commentId)
+            .set({
                 coin_symbol: symbol,
                 coin_id: id,
                 comment_id: commentId,

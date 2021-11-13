@@ -6,6 +6,7 @@ import ProfileTab from "../navigators/ProfileTab";
 import { Entypo } from "@expo/vector-icons";
 import { List } from "./Community";
 import Post from "../components/Post";
+import { ActivityIndicator } from "react-native";
 
 const Container = styled.View`
     background-color: #1e272e;
@@ -50,8 +51,8 @@ export const EditText = styled.Text`
 
 const Profile = ({ navigation }) => {
     const { user, setUser } = useContext(AuthContext);
-    const [userData, setUserData] = useState(null);
-    const [commentSize, setCommentSize] = useState(0);
+    const [userData, setUserData] = useState([]);
+    const [commentSize, setCommentSize] = useState(null);
     navigation.setOptions({
         headerRight: () => (
             <EditBtn onPress={() => navigation.navigate("편집", { userData })}>
@@ -59,29 +60,28 @@ const Profile = ({ navigation }) => {
             </EditBtn>
         ),
     });
-    useEffect(() => {
+
+    const getUserData = () => {
         firestore()
             .collection("user")
             .doc(user.uid)
             .onSnapshot((snapshot) => {
-                if (snapshot.exists) {
-                    setUserData(snapshot.data());
-                }
+                setUserData(snapshot.data());
             });
-    }, []);
-    //
-    const getCommentsCount = async () => {
-        await firestore()
+    };
+    const getOpnionCount = () => {
+        firestore()
             .collection("user")
             .doc(user.uid)
-            .collection("comments")
+            .collection("opnions")
             .get()
             .then((snapshot) => {
                 setCommentSize(snapshot.size);
             });
     };
     useEffect(() => {
-        getCommentsCount();
+        getUserData();
+        getOpnionCount();
     }, []);
     return (
         <Container>
@@ -102,13 +102,14 @@ const Profile = ({ navigation }) => {
                 >
                     <ProfileImg
                         source={{
-                            uri: userData
+                            uri: userData.profile_picture
                                 ? userData.profile_picture
                                 : "https://lh5.googleusercontent.com/-b0PKyNuQv5s/AAAAAAAAAAI/AAAAAAAAAAA/AMZuuclxAM4M1SCBGAO7Rp-QP6zgBEUkOQ/s96-c/photo.jpg",
                         }}
                     />
                 </EditBtn>
             </Wrapper>
+
             <ProfileTab />
         </Container>
     );

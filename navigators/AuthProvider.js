@@ -42,14 +42,15 @@ export const AuthProvider = ({ children }) => {
                         await auth()
                             .createUserWithEmailAndPassword(email, passord)
                             .then(async () => {
-                                const imageUrl = await uploadImg(image);
                                 firestore()
                                     .collection("user")
                                     .doc(auth().currentUser.uid)
                                     .set({
                                         email,
                                         owner_id: auth().currentUser.uid,
-                                        profile_picture: imageUrl,
+                                        profile_picture: image
+                                            ? await uploadImg(image)
+                                            : image,
                                         user_name: name,
                                         coins: [],
                                     })

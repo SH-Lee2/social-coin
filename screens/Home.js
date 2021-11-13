@@ -23,7 +23,6 @@ export const List = styled.FlatList`
 const Home = () => {
     const { isLoading, data } = useQuery("coins", coins);
     const [cleanData, setCleanData] = useState([]);
-    console.log("Home");
     useEffect(() => {
         if (data) {
             setCleanData(

@@ -1,12 +1,12 @@
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import React, { useContext, useEffect, useState } from "react";
-import ProfileTabBar from "../components/ProfileTabBar";
 import Post from "../components/Post";
 import firestore from "@react-native-firebase/firestore";
 import { List } from "../screens/Community";
 import { AuthContext } from "./AuthProvider";
 import styled from "styled-components/native";
 import { ActivityIndicator } from "react-native";
+import TabBar from "../components/TabBar";
 
 const Container = styled.View`
     flex : 1
@@ -31,7 +31,7 @@ const Opinion = () => {
         await firestore()
             .collection("user")
             .doc(user.uid)
-            .collection("comments")
+            .collection("opnions")
             .orderBy("createAd", "desc")
             .get()
             .then((snapshot) => {
@@ -73,7 +73,9 @@ const Comments = () => {
 };
 const ProfileTab = () => {
     return (
-        <Nav.Navigator tabBar={(props) => <ProfileTabBar {...props} />}>
+        <Nav.Navigator
+            tabBar={(props) => <TabBar {...props} screen={"profile"} />}
+        >
             <Nav.Screen name="의견" component={Opinion} />
             <Nav.Screen name="댓글" component={Comments} />
         </Nav.Navigator>

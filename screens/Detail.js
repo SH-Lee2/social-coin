@@ -100,15 +100,18 @@ const Detail = ({
         ["coinHistory", id],
         history
     );
-    firestore()
-        .collection("user")
-        .doc(user.uid)
-        .get()
-        .then((doc) =>
-            doc.data().coins.filter((v) => {
-                if (v === id) setPick(true);
-            })
-        );
+    const init = () => {
+        firestore()
+            .collection("user")
+            .doc(user.uid)
+            .get()
+            .then((doc) =>
+                doc.data().coins.filter((v) => {
+                    if (v.id === id) setPick(true);
+                })
+            );
+    };
+    init();
     const clickLike = () => {
         setPick(!pick);
         firestore()
@@ -116,40 +119,38 @@ const Detail = ({
             .doc(user.uid)
             .update({
                 coins: pick
-                    ? firestore.FieldValue.arrayRemove(id)
-                    : firestore.FieldValue.arrayUnion(id),
+                    ? firestore.FieldValue.arrayRemove({ symbol, id })
+                    : firestore.FieldValue.arrayUnion({ symbol, id }),
             });
     };
-    useEffect(() => {
-        navigation.setOptions({
-            headerTitle: () => (
-                <HeaderWrapper>
-                    <Icon
-                        source={{
-                            uri: `https://cryptoicon-api.vercel.app/api/icon/${symbol.toLowerCase()}`,
-                        }}
-                    />
-                    {!coinTickersData ? (
-                        <ActivityIndicator color="white" />
-                    ) : (
-                        <Price rate={rate}>
-                            $ {price}
-                            {"  "} {rate}%
-                        </Price>
-                    )}
-                </HeaderWrapper>
-            ),
-            headerRight: () => (
-                <ClickLike onPress={() => clickLike()}>
-                    {pick ? (
-                        <Entypo name="heart" size={24} color="pink" />
-                    ) : (
-                        <Entypo name="heart" size={24} color="gray" />
-                    )}
-                </ClickLike>
-            ),
-        });
-    }, [pick]);
+    navigation.setOptions({
+        headerTitle: () => (
+            <HeaderWrapper>
+                <Icon
+                    source={{
+                        uri: `https://cryptoicon-api.vercel.app/api/icon/${symbol.toLowerCase()}`,
+                    }}
+                />
+                {coinTickersLoading ? (
+                    <ActivityIndicator color="white" />
+                ) : (
+                    <Price rate={rate}>
+                        $ {price}
+                        {"  "} {rate}%
+                    </Price>
+                )}
+            </HeaderWrapper>
+        ),
+        headerRight: () => (
+            <ClickLike onPress={() => clickLike()}>
+                {pick ? (
+                    <Entypo name="heart" size={24} color="pink" />
+                ) : (
+                    <Entypo name="heart" size={24} color="gray" />
+                )}
+            </ClickLike>
+        ),
+    });
     useEffect(() => {
         firestore()
             .collection(`${id}`)
@@ -162,8 +163,8 @@ const Detail = ({
             });
     }, []);
 
-    const roundToTwo = (num) => {
-        return +(Math.round(num + "e+2") + "e-2");
+    const roundToFour = (num) => {
+        return +(Math.round(num + "e+4") + "e-4");
     };
 
     useEffect(() => {
@@ -173,7 +174,8 @@ const Detail = ({
                     USD: { price, percent_change_15m },
                 },
             } = coinTickersData;
-            setPrice(roundToTwo(price));
+            console.log(price);
+            setPrice(roundToFour(price));
             setRate(percent_change_15m);
         }
     }, [coinTickersData]);

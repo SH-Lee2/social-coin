@@ -8,7 +8,9 @@ const Nav = createMaterialTopTabNavigator();
 
 function TopTab() {
     return (
-        <Nav.Navigator tabBar={(props) => <TabBar {...props} />}>
+        <Nav.Navigator
+            tabBar={(props) => <TabBar {...props} screen={"home"} />}
+        >
             <Nav.Screen name="전체" component={Home} />
             <Nav.Screen name="관심" component={Like} />
         </Nav.Navigator>

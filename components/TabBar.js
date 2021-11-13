@@ -13,8 +13,8 @@ const Container = styled.View`
 const TabWrapper = styled.View`
     flex-direction: row;
     align-items: center;
-    padding-left: 4
     background-color: #1e272e;
+    ${(props) => props.screen === "profile" && "justify-content : space-around"}
 `;
 
 const TabButton = styled.TouchableOpacity`
@@ -25,6 +25,7 @@ const TabButton = styled.TouchableOpacity`
     margin-right : 16;
     margin-bottom : 0;
     margin-left : 16
+    ${(props) => props.screen === "profile" && "width : 50%"}
     border-bottom-width: 2
     border-bottom-color: ${(props) =>
         props.isFocused ? "white" : "transparent"};
@@ -35,11 +36,17 @@ const TabText = styled(Animated.createAnimatedComponent(Text))`
     color: ${(props) => (props.isFocused ? "white" : "gray")};
 `;
 
-export default function TabBar({ state, descriptors, navigation, position }) {
+export default function TabBar({
+    state,
+    descriptors,
+    navigation,
+    position,
+    screen,
+}) {
     return (
         <Container>
-            <SearchBar />
-            <TabWrapper>
+            {screen === "home" ? <SearchBar /> : null}
+            <TabWrapper screen={screen}>
                 {state.routes.map((route, index) => {
                     const { options } = descriptors[route.key];
                     const label = route.name;
@@ -63,6 +70,7 @@ export default function TabBar({ state, descriptors, navigation, position }) {
                     });
                     return (
                         <TabButton
+                            screen={screen}
                             isFocused={isFocused}
                             onPress={onPress}
                             key={`tab_${index}`}

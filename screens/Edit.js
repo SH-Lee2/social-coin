@@ -1,5 +1,3 @@
-import { useAssets } from "expo-asset";
-import { UserInterfaceIdiom } from "expo-constants";
 import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components/native";
 import { EditBtn, EditText, ProfileImg } from "./Profile";
@@ -48,10 +46,9 @@ const Edit = ({
         params: { userData },
     },
 }) => {
-    const [name, setName] = useState("");
-    const [image, setImage] = useState("");
+    const [name, setName] = useState(null);
+    const [image, setImage] = useState(null);
     const { user } = useContext(AuthContext);
-    const [comments, setComments] = useState([]);
 
     navigation.setOptions({
         headerRight: () => (
@@ -70,70 +67,16 @@ const Edit = ({
         ),
     });
 
-    const uploadImg = async (Img) => {
-        const filename = Img.substring(Img.lastIndexOf("/") + 1);
-        const storageRef = storage().ref(`photos/${filename}`);
-        const task = storageRef.putFile(Img);
-        try {
-            await task;
-            const url = await storageRef.getDownloadURL();
-            return url;
-        } catch (e) {
-            console.log("이미지 다운 실패");
-        }
-    };
-    const updateProfile = async () => {
-        const imageUrl = await uploadImg(image);
-        await firestore()
-            .collection("user")
-            .doc(user.uid)
-            .update({
-                user_name: !name ? userData.user_name : name,
-                profile_picture: !image ? userData.profile_picture : imageUrl,
-            })
-            .then(() => {
-                updateComment();
-                Alert.alert("프로필 변경 완료");
-            })
-            .catch((e) => console.log("update fail : ", e));
-        Keyboard.dismiss();
-    };
-
-    const getComment = () => {
-        firestore()
-            .collection("user")
-            .doc(user.uid)
-            .collection("comments")
-            .get()
-            .then((doc) => setComments(doc.docs.map((doc) => doc.data())));
-    };
-
-    const updateComment = async () => {
-        getComment();
-        comments.forEach(async (doc) => {
-            await firestore()
-                .collection(doc.coin_id)
-                .doc(doc.comment_id)
-                .update({
-                    owner_name: !name ? userData.user_name : name,
-                    owner_profile_picture: !image
-                        ? userData.profile_picture
-                        : imageUrl,
-                });
-        });
-    };
     useEffect(() => {
-        (async () => {
-            if (Platform.OS !== "web") {
-                const { status } =
-                    await ImagePicker.requestMediaLibraryPermissionsAsync();
-                if (status !== "granted") {
-                    alert(
-                        "Sorry, we need camera roll permissions to make this work!"
-                    );
-                }
+        if (Platform.OS !== "web") {
+            const { status } =
+                ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== "granted") {
+                alert(
+                    "Sorry, we need camera roll permissions to make this work!"
+                );
             }
-        })();
+        }
     }, []);
 
     const pickImage = async () => {
@@ -149,17 +92,70 @@ const Edit = ({
         }
     };
 
+    const uploadImg = async (Img) => {
+        const filename = Img.substring(Img.lastIndexOf("/") + 1);
+        const storageRef = storage().ref(`photos/${filename}`);
+        const task = storageRef.putFile(Img);
+        try {
+            await task;
+            const url = await storageRef.getDownloadURL();
+            return url;
+        } catch (e) {
+            console.log("이미지 다운 실패");
+        }
+    };
+    const updateProfile = async () => {
+        Keyboard.dismiss();
+        const imageUrl = await uploadImg(image);
+        await firestore()
+            .collection("user")
+            .doc(user.uid)
+            .update({
+                user_name: !name ? userData.user_name : name,
+                profile_picture: !image ? userData.profile_picture : imageUrl,
+            })
+            .then(() => {
+                updateOpnion(imageUrl);
+                Alert.alert("프로필 변경 완료");
+            })
+            .catch((e) => console.log("update fail : ", e));
+    };
+
+    const getOpnion = () => {
+        return firestore()
+            .collection("user")
+            .doc(user.uid)
+            .collection("opnions")
+            .get()
+            .then((doc) => doc.docs);
+    };
+    const updateOpnion = async (imageUrl) => {
+        const opnion = await getOpnion();
+        console.log(opnion);
+        opnion.forEach((doc) => {
+            firestore()
+                .collection(doc.data().coin_id)
+                .doc(doc.data().comment_id)
+                .update({
+                    owner_name: !name ? userData.user_name : name,
+                    owner_profile_picture: !image
+                        ? userData.profile_picture
+                        : imageUrl,
+                });
+        });
+    };
+
     return (
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
             <Container>
                 <ProfileImgClick onPress={() => pickImage()}>
-                    <ProfileImg />
                     <ProfileImg
                         source={{
-                            uri:
-                                image.length === 0
-                                    ? userData.profile_picture
-                                    : image,
+                            uri: image
+                                ? image
+                                : userData.profile_picture
+                                ? userData.profile_picture
+                                : "https://lh5.googleusercontent.com/-b0PKyNuQv5s/AAAAAAAAAAI/AAAAAAAAAAA/AMZuuclxAM4M1SCBGAO7Rp-QP6zgBEUkOQ/s96-c/photo.jpg",
                         }}
                     />
                 </ProfileImgClick>
