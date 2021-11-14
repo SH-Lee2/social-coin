@@ -238,7 +238,10 @@ const Detail = ({
                         <CommunityCount>{commentCount} &gt;</CommunityCount>
                     </CommuntityHeader>
                     <CommentWrapper>
-                        <Comment>{lastComment}</Comment>
+                        <Comment>
+                            {lastComment.substring(0, 30)}
+                            {lastComment.length > 30 ? "..." : null}
+                        </Comment>
                     </CommentWrapper>
                 </TouchableOpacity>
             </Wrapper>

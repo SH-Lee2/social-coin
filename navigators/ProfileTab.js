@@ -23,11 +23,11 @@ const Empty = styled.Text`
 
 const Nav = createMaterialTopTabNavigator();
 
-const Opinion = () => {
+const Opinion = ({ route }) => {
     const { user, setUser } = useContext(AuthContext);
-    const [commentsData, setCommentsData] = useState([]);
+    const [opnionData, setopnionData] = useState([]);
     const [loadging, setLoading] = useState(false);
-    const getComments = async () => {
+    const getOpnions = async () => {
         await firestore()
             .collection("user")
             .doc(user.uid)
@@ -35,23 +35,23 @@ const Opinion = () => {
             .orderBy("createAd", "desc")
             .get()
             .then((snapshot) => {
-                setCommentsData(snapshot.docs.map((doc) => doc.data()));
+                setopnionData(snapshot.docs.map((doc) => doc.data()));
             });
     };
     useEffect(async () => {
-        await getComments();
+        await getOpnions();
         setLoading(true);
     }, []);
 
     return (
         <Container>
             {loadging ? (
-                commentsData.length !== 0 ? (
+                opnionData.length !== 0 ? (
                     <List
-                        data={commentsData}
+                        data={opnionData}
                         keyExtractor={(item) => item.id}
                         renderItem={({ item, index }) => (
-                            <Post index={index} item={item} />
+                            <Post index={index} item={item} screen={"opnion"} />
                         )}
                     />
                 ) : (
@@ -64,13 +64,50 @@ const Opinion = () => {
     );
 };
 
-const Comments = () => {
+const Comments = ({ route }) => {
+    const { user, setUser } = useContext(AuthContext);
+    const [commentsData, setCommentsData] = useState([]);
+    const [loadging, setLoading] = useState(false);
+    const getComments = async () => {
+        await firestore()
+            .collection("user")
+            .doc(user.uid)
+            .collection("comments")
+            .orderBy("createAd", "desc")
+            .get()
+            .then((snapshot) => {
+                setCommentsData(snapshot.docs.map((doc) => doc.data()));
+            });
+    };
+    useEffect(async () => {
+        await getComments();
+        setLoading(true);
+    }, []);
     return (
         <Container>
-            <Empty>작성한 댓글이 없습니다</Empty>
+            {loadging ? (
+                commentsData.length !== 0 ? (
+                    <List
+                        data={commentsData}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item, index }) => (
+                            <Post
+                                index={index}
+                                item={item}
+                                screen={"comment"}
+                            />
+                        )}
+                    />
+                ) : (
+                    <Empty>작성한 댓글이 없습니다.</Empty>
+                )
+            ) : (
+                <ActivityIndicator color="white" />
+            )}
         </Container>
     );
 };
+
 const ProfileTab = () => {
     return (
         <Nav.Navigator

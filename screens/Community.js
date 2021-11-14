@@ -10,13 +10,14 @@ import {
     View,
     ScrollView,
 } from "react-native";
-import Post from "../components/Post";
+import Post, { UserAvatar } from "../components/Post";
 import { AuthContext } from "../navigators/AuthProvider";
 
 const Container = styled.View`
-    background-color: #1e272e;
-    flex: 1;
-    justify-content: center;
+flex : 1
+background-color: #1e272e;
+flex-direction: row
+justify-content : center
 `;
 
 export const List = styled.FlatList`
@@ -34,12 +35,7 @@ const Wrapper = styled.TouchableOpacity`
     width: 100%;
 `;
 // 나중에 이미지로 변경
-const UserAvatar = styled.Image`
-    border-radius: 100;
-    width: 50;
-    height: 50;
-    padding-left: 10;
-`;
+
 const CommentText = styled.Text`
     flex :1
     color : gray
@@ -96,7 +92,12 @@ const Community = ({
                     data={posts}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item, index }) => (
-                        <Post index={index} item={item} />
+                        <Post
+                            index={index}
+                            item={item}
+                            userData={userData}
+                            screen={"opnion"}
+                        />
                     )}
                 />
             )}

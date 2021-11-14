@@ -34,6 +34,7 @@ const CommentUpload = ({
                 like: null,
                 comments: null,
                 coin_id: id,
+                symbol,
                 createAd: Date.now(),
             })
             .then((data) => {

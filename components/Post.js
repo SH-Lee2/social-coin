@@ -6,86 +6,138 @@ import { FontAwesome } from "@expo/vector-icons";
 import { Entypo } from "@expo/vector-icons";
 import { Alert, Pressable, TouchableOpacity } from "react-native";
 import { AuthContext } from "../navigators/AuthProvider";
+import { get } from "react-native/Libraries/Utilities/PixelRatio";
 
-const Container = styled.View`
+export const Container = styled.View`
     flex: 1;
     flex-direction : row
     align-items : flex-start
-    border-bottom-color: gray;
+    border-bottom-color: gray
     border-bottom-width: 1
-    padding-top : 20;
-    padding-bottom :10
-    
+    padding-top : 20
+    padding-bottom :20
+    padding-right : 20
 `;
-const UserAvatar = styled.Image`
+export const UserAvatar = styled.Image`
     border-radius: 100;
     width: 40;
     height: 40;
 `;
-const Wrapper = styled.View`
+export const Wrapper = styled.View`
     padding-left: 20;
+    flex: 1;
 `;
-const PostHeader = styled.View`
+export const PostHeader = styled.View`
     flex-direction: row;
     align-items: center;
 `;
-const PostDisplayName = styled.Text`
+export const PostDisplayName = styled.Text`
     color: white;
     margin-right: 20
     font-size: 14;
 `;
-const PostCreateAd = styled.Text`
+export const PostCreateAd = styled.Text`
     color: white;
     font-size: 12;
 `;
-const PostTitle = styled.View`
+export const PostTitle = styled.View`
     margin-top: 10;
 `;
-const PostTitleText = styled.Text`
+export const PostTitleText = styled.Text`
     color: white;
     font-size: 16;
 `;
-const IconWrapper = styled.View`
+export const IconWrapper = styled.View`
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
     margin-top: 15;
 `;
 
-const Post = ({ item, index }) => {
+const Post = ({ item, userData, screen }) => {
     const navigation = useNavigation();
     const { user } = useContext(AuthContext);
-    const deleteUserOpnion = () => {
-        firestore()
-            .collection("user")
-            .doc(user.uid)
-            .collection("opnions")
+    const deleteUserOpnion = async () => {
+        const ref = firestore().collection("user");
+        const totalID = await firestore()
+            .collection(item.coin_id)
             .doc(item.opnion_id)
-            .delete();
+            .collection("comments")
+            .get()
+            .then((doc) => doc.docs.map((d) => d.data().owner_id));
+        console.log(totalID);
+        // user에 댓글 삭제
+        // 다른사람이 의견을 삭제하면 의견에 달린 댓글 도 삭제 됨 그때 댓글을 단  모든 유저 댓글이 삭제
+        totalID.forEach((user) =>
+            ref
+                .doc(user)
+                .collection("comments")
+                .get()
+                .then((doc) => {
+                    doc.docs.filter((v) => {
+                        if (v.id === v.data().comment_id) v.ref.delete();
+                    });
+                })
+        );
+        // user에 의견 삭제
+        ref.doc(user.uid).collection("opnions").doc(item.opnion_id).delete(); //
     };
 
     const deleteCoinOpnion = () => {
+        //collection 하위 doc 모두 삭제
+        const ref = firestore()
+            .collection(item.coin_id)
+            .doc(item.opnion_id)
+            .collection("comments");
+        ref.get().then((querySnapshot) => {
+            Promise.all(querySnapshot.docs.map((d) => d.ref.delete()));
+        });
         firestore().collection(item.coin_id).doc(item.opnion_id).delete();
+    };
+
+    const deleteUserComment = () => {
+        firestore()
+            .collection("user")
+            .doc(user.uid)
+            .collection("comments")
+            .doc(item.comment_id)
+            .delete();
+    };
+    const deleteCoinComment = () => {
+        firestore()
+            .collection(item.coin_id)
+            .doc(item.opnion_id)
+            .collection("comments")
+            .doc(item.comment_id)
+            .delete();
     };
     return (
         <Pressable
             onLongPress={() => {
                 if (user.uid === item.owner_id) {
-                    Alert.alert("의견 삭제", "의견을 삭제하시겠습니까?", [
-                        {
-                            text: "취소",
-                            onPress: () => console.log("Cancel Pressed"),
-                        },
-                        {
-                            text: "네",
-                            onPress: () => {
-                                deleteCoinOpnion();
-                                deleteUserOpnion();
-                                console.log(item);
-                                console.log("delete Opnion");
+                    Alert.alert(
+                        `${screen === "opnion" ? "의견" : "댓글"} 삭제`,
+                        `${
+                            screen === "opnion" ? "의견" : "댓글"
+                        }을 삭제하시겠습니까?`,
+                        [
+                            {
+                                text: "취소",
+                                onPress: () => console.log("Cancel Pressed"),
                             },
-                        },
-                    ]);
+                            {
+                                text: "네",
+                                onPress: () => {
+                                    {
+                                        screen === "opnion"
+                                            ? (deleteUserOpnion(),
+                                              deleteCoinOpnion())
+                                            : (deleteUserComment(),
+                                              deleteCoinComment());
+                                    }
+                                },
+                            },
+                        ]
+                    );
                 }
             }}
             delayLongPress={500}
@@ -106,7 +158,9 @@ const Post = ({ item, index }) => {
                         <PostDisplayName>
                             {item.owner_name
                                 ? item.owner_name
-                                : `${item.coin_symbol}에 쓴 의견`}
+                                : `${item.coin_symbol}에 쓴 ${
+                                      screen === "comment" ? "댓글" : "의견"
+                                  }`}
                         </PostDisplayName>
                         <PostCreateAd>1분전</PostCreateAd>
                     </PostHeader>
@@ -116,15 +170,23 @@ const Post = ({ item, index }) => {
 
                     <IconWrapper>
                         <Entypo name="heart" size={24} color="gray" />
-                        <TouchableOpacity
-                            onPress={() => navigation.navigate("추가", {})}
-                        >
-                            <FontAwesome
-                                name="commenting-o"
-                                size={24}
-                                color="gray"
-                            />
-                        </TouchableOpacity>
+                        {screen !== "comment" && (
+                            <TouchableOpacity
+                                onPress={() =>
+                                    navigation.navigate("추가", {
+                                        item,
+                                        userData,
+                                    })
+                                }
+                            >
+                                <FontAwesome
+                                    name="commenting-o"
+                                    size={24}
+                                    color="gray"
+                                    style={{ paddingLeft: 30 }}
+                                />
+                            </TouchableOpacity>
+                        )}
                     </IconWrapper>
                 </Wrapper>
             </Container>
