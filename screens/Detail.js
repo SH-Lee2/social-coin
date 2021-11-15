@@ -15,6 +15,7 @@ import firestore from "@react-native-firebase/firestore";
 import { AuthContext } from "../navigators/AuthProvider";
 import { Entypo } from "@expo/vector-icons";
 import { VictoryChart, VictoryLine, VictoryScatter } from "victory-native";
+import { FlatList } from "react-native-gesture-handler";
 
 const ClickLike = styled.TouchableOpacity``;
 
@@ -24,9 +25,10 @@ const Container = styled.ScrollView`
     padding-right : 10
     flex: 1;
 `;
-const CoinInfoWrapper = styled.View`
+const ContentWrapper = styled.View`
     flex: 1;
 `;
+
 const Wrapper = styled.View`
     margin-top: 30
     background-color: rgba(255, 255, 255, 0.1);
@@ -35,6 +37,7 @@ const Wrapper = styled.View`
     margin-bottom : 10
 
 `;
+
 const CommuntityHeader = styled.View`
     flex-direction: row;
     justify-content: space-between;
@@ -75,6 +78,24 @@ const Price = styled.Text`
     color: ${(props) => (props.rate > 0 ? "green" : "red")}
     font-size: 16
 `;
+
+// 시간 선택!
+const PickWrapper = styled.FlatList`
+    padding-bottom: 20;
+`;
+const PickTouch = styled.TouchableOpacity`
+    padding-top : 10
+    padding-left : 15
+    padding-bottom : 10
+    padding-right: 15
+    background-color : gray
+    border-radius : 5
+    flex-direction : row
+    justify-content : space-between
+`;
+const PickText = styled.Text`
+    color: white;
+`;
 const Detail = ({
     navigation,
     route: {
@@ -87,6 +108,23 @@ const Detail = ({
     const [pick, setPick] = useState(false);
     const [price, setPrice] = useState(null);
     const [rate, setRate] = useState(null);
+    const [historyTime, setHistoryTime] = useState("15m");
+    const times = [
+        "5m",
+        "10m",
+        "15m",
+        "30m",
+        "45m",
+        "1h",
+        "2h",
+        "3h",
+        "6h",
+        "12h",
+        "24h",
+        "1d",
+        "7d",
+        "30d",
+    ];
     const { isLoading: coinTickersLoading, data: coinTickersData } = useQuery(
         ["coinTickers", id],
         coinTickers
@@ -97,7 +135,7 @@ const Detail = ({
         info
     );
     const { isLoading: historyLoading, data: historyData } = useQuery(
-        ["coinHistory", id],
+        ["coinHistory", id, historyTime],
         history
     );
     const init = () => {
@@ -191,10 +229,9 @@ const Detail = ({
             );
         }
     }, [historyData]);
-
     return (
         <Container refreshControl={<RefreshControl />}>
-            {!victoryData ? (
+            {/* {!victoryData ? (
                 <ActivityIndicator color="white" />
             ) : (
                 <VictoryChart height={Dimensions.get("window").height / 2}>
@@ -209,9 +246,38 @@ const Detail = ({
                         style={{ data: { fill: "#1abc9c" } }}
                     />
                 </VictoryChart>
-            )}
+            )} */}
+            <FlatList
+                data={victoryData}
+                horizontal={true}
+                renderItem={({ item }) => (
+                    <VictoryChart height={Dimensions.get("window").height / 2}>
+                        <VictoryLine
+                            animate
+                            interpolation="monotoneX"
+                            data={item}
+                            style={{ data: { stroke: "#1abc9c" } }}
+                        />
+                        <VictoryScatter
+                            data={item}
+                            style={{ data: { fill: "#1abc9c" } }}
+                        />
+                    </VictoryChart>
+                )}
+            />
+            <PickWrapper
+                data={times}
+                ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
+                renderItem={({ item }) => (
+                    <PickTouch onPress={() => setHistoryTime(item)}>
+                        <PickText>{item}</PickText>
+                    </PickTouch>
+                )}
+                horizontal={true}
+                showsHorizontalScrollIndicator={false}
+            />
             {!infoLoading ? (
-                <CoinInfoWrapper>
+                <ContentWrapper>
                     <CoinInfoTitle>코인 설명</CoinInfoTitle>
                     <Text
                         style={{
@@ -222,7 +288,7 @@ const Detail = ({
                             ? infoData.description
                             : "코인 정보가 없습니다."}
                     </Text>
-                </CoinInfoWrapper>
+                </ContentWrapper>
             ) : (
                 <ActivityIndicator color="white" />
             )}

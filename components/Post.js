@@ -4,7 +4,7 @@ import styled from "styled-components/native";
 import firestore from "@react-native-firebase/firestore";
 import { FontAwesome } from "@expo/vector-icons";
 import { Entypo } from "@expo/vector-icons";
-import { Alert, Pressable, TouchableOpacity } from "react-native";
+import { Alert, Pressable, Text, TouchableOpacity } from "react-native";
 import { AuthContext } from "../navigators/AuthProvider";
 import { get } from "react-native/Libraries/Utilities/PixelRatio";
 
@@ -110,6 +110,10 @@ const Post = ({ item, userData, screen }) => {
             .doc(item.comment_id)
             .delete();
     };
+    const createdTime = new Date(item.createAd).toISOString().split("T");
+    const fullDay = createdTime[0].substring(2);
+    const fullTime = createdTime[1].substring(0, 5);
+
     return (
         <Pressable
             onLongPress={() => {
@@ -162,7 +166,10 @@ const Post = ({ item, userData, screen }) => {
                                       screen === "comment" ? "댓글" : "의견"
                                   }`}
                         </PostDisplayName>
-                        <PostCreateAd>1분전</PostCreateAd>
+                        <PostCreateAd>
+                            {fullDay}
+                            {"   "} {fullTime}
+                        </PostCreateAd>
                     </PostHeader>
                     <PostTitle>
                         <PostTitleText>{item.comment}</PostTitleText>

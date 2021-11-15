@@ -53,6 +53,7 @@ const Community = ({
     const [userData, setUserData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [posts, setPosts] = useState([]);
+
     useEffect(() => {
         navigation.setOptions({
             headerTitle: () => (

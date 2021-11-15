@@ -35,7 +35,7 @@ const CommentUpload = ({
                 comments: null,
                 coin_id: id,
                 symbol,
-                createAd: Date.now(),
+                createAd: Date.now() + 32400000,
             })
             .then((data) => {
                 console.log("User added!");

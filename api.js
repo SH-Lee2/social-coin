@@ -15,7 +15,7 @@ export const history = ({ queryKey }) =>
     fetch(
         `${BASE_URL}/tickers/${queryKey[1]}/historical?start=${
             new Date().toISOString().split("T")[0]
-        }&interval=15m`
+        }&interval=${queryKey[2]}`
     ).then((response) => response.json());
 
 export const coinTickers = ({ queryKey }) =>

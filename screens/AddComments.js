@@ -82,7 +82,7 @@ const AddComments = ({
                 owner_profile_picture: userData.profile_picture,
                 like: null,
                 coin_id: item.coin_id,
-                createAd: Date.now(),
+                createAd: Date.now() + 32400000,
                 opnion_id: item.opnion_id,
             })
             .then((data) => {
@@ -108,7 +108,7 @@ const AddComments = ({
                 coin_id: item.coin_id,
                 comment_id: commentId,
                 comment,
-                createAd: Date.now(),
+                createAd: Date.now() + 32400000,
             });
     };
     useEffect(() => {
@@ -121,6 +121,9 @@ const AddComments = ({
                 setPosts(snapshot.docs.map((doc) => doc.data()));
             });
     }, []);
+    const createdTime = new Date(item.createAd).toISOString().split("T");
+    const fullDay = createdTime[0].substring(2);
+    const fullTime = createdTime[1].substring(0, 5);
     return (
         <Container>
             <Wrapper>
@@ -128,7 +131,10 @@ const AddComments = ({
                 <TextWrapper>
                     <PostHeader>
                         <PostDisplayName>{item.owner_name}</PostDisplayName>
-                        <PostCreateAd>1분전</PostCreateAd>
+                        <PostCreateAd>
+                            {fullDay}
+                            {"   "} {fullTime}
+                        </PostCreateAd>
                     </PostHeader>
                     <PostTitle>
                         <PostTitleText>{item.comment}</PostTitleText>
