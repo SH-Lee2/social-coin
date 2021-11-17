@@ -124,10 +124,17 @@ const AddComments = ({
     const createdTime = new Date(item.createAd).toISOString().split("T");
     const fullDay = createdTime[0].substring(2);
     const fullTime = createdTime[1].substring(0, 5);
+    console.log(userData);
     return (
         <Container>
             <Wrapper>
-                <UserAvatar source={{ uri: item.owner_profile_picture }} />
+                <UserAvatar
+                    source={{
+                        uri: item.owner_profile_picture
+                            ? item.owner_profile_picture
+                            : "https://lh5.googleusercontent.com/-b0PKyNuQv5s/AAAAAAAAAAI/AAAAAAAAAAA/AMZuuclxAM4M1SCBGAO7Rp-QP6zgBEUkOQ/s96-c/photo.jpg",
+                    }}
+                />
                 <TextWrapper>
                     <PostHeader>
                         <PostDisplayName>{item.owner_name}</PostDisplayName>
@@ -158,7 +165,13 @@ const AddComments = ({
                 )}
             />
             <CommentInputWrapper>
-                <UserAvatar source={{ uri: item.owner_profile_picture }} />
+                <UserAvatar
+                    source={{
+                        uri: userData.profile_picture
+                            ? userData.profile_picture
+                            : "https://lh5.googleusercontent.com/-b0PKyNuQv5s/AAAAAAAAAAI/AAAAAAAAAAA/AMZuuclxAM4M1SCBGAO7Rp-QP6zgBEUkOQ/s96-c/photo.jpg",
+                    }}
+                />
                 <CommentInput
                     placeholder="댓글을 남겨 주세요"
                     placeholderTextColor="gray"

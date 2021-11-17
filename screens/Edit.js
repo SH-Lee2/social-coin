@@ -93,6 +93,7 @@ const Edit = ({
     };
 
     const uploadImg = async (Img) => {
+        if (!Img) return;
         const filename = Img.substring(Img.lastIndexOf("/") + 1);
         const storageRef = storage().ref(`photos/${filename}`);
         const task = storageRef.putFile(Img);

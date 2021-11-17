@@ -10,12 +10,18 @@ import {
 import { useQuery } from "react-query";
 import styled from "styled-components/native";
 import { coinTickers, history, info } from "../api";
-import { Icon } from "../components/Coin";
+import Coin, { Icon } from "../components/Coin";
 import firestore from "@react-native-firebase/firestore";
 import { AuthContext } from "../navigators/AuthProvider";
 import { Entypo } from "@expo/vector-icons";
-import { VictoryChart, VictoryLine, VictoryScatter } from "victory-native";
-import { FlatList } from "react-native-gesture-handler";
+import {
+    VictoryBrushContainer,
+    VictoryChart,
+    VictoryCursorContainer,
+    VictoryLine,
+    VictoryScatter,
+    VictoryZoomContainer,
+} from "victory-native";
 
 const ClickLike = styled.TouchableOpacity``;
 
@@ -25,16 +31,15 @@ const Container = styled.ScrollView`
     padding-right : 10
     flex: 1;
 `;
-const ContentWrapper = styled.View`
-    flex: 1;
-`;
 
 const Wrapper = styled.View`
-    margin-top: 30
-    background-color: rgba(255, 255, 255, 0.1);
-    padding-left : 20;
-    padding-right : 20;
-    margin-bottom : 10
+    background-color: #34495e
+    padding-left : 10;
+    margin-bottom : 20
+    padding-right : 20
+    border-radius : 10
+    padding-top : 10
+    padding-bottom : 10
 
 `;
 
@@ -81,14 +86,16 @@ const Price = styled.Text`
 
 // 시간 선택!
 const PickWrapper = styled.FlatList`
-    padding-bottom: 20;
+    padding-bottom: 10;
+    padding-left: 10;
 `;
 const PickTouch = styled.TouchableOpacity`
     padding-top : 10
     padding-left : 15
     padding-bottom : 10
     padding-right: 15
-    background-color : gray
+    background-color : ${(porps) => (porps.check ? "tomato" : "#2c3e50")}
+
     border-radius : 5
     flex-direction : row
     justify-content : space-between
@@ -109,22 +116,7 @@ const Detail = ({
     const [price, setPrice] = useState(null);
     const [rate, setRate] = useState(null);
     const [historyTime, setHistoryTime] = useState("15m");
-    const times = [
-        "5m",
-        "10m",
-        "15m",
-        "30m",
-        "45m",
-        "1h",
-        "2h",
-        "3h",
-        "6h",
-        "12h",
-        "24h",
-        "1d",
-        "7d",
-        "30d",
-    ];
+    const times = ["5m", "10m", "15m", "30m", "45m", "1h", "2h", "3h", "6h"];
     const { isLoading: coinTickersLoading, data: coinTickersData } = useQuery(
         ["coinTickers", id],
         coinTickers
@@ -134,6 +126,7 @@ const Detail = ({
         ["coinInfo", id],
         info
     );
+
     const { isLoading: historyLoading, data: historyData } = useQuery(
         ["coinHistory", id, historyTime],
         history
@@ -189,6 +182,7 @@ const Detail = ({
             </ClickLike>
         ),
     });
+
     useEffect(() => {
         firestore()
             .collection(`${id}`)
@@ -209,75 +203,66 @@ const Detail = ({
         if (coinTickersData) {
             const {
                 quotes: {
-                    USD: { price, percent_change_15m },
+                    USD: { price, market_cap_change_24h },
                 },
             } = coinTickersData;
-            console.log(price);
             setPrice(roundToFour(price));
-            setRate(percent_change_15m);
+            setRate(market_cap_change_24h);
         }
     }, [coinTickersData]);
 
     const [victoryData, setVictoryData] = useState(null);
     useEffect(() => {
         if (historyData) {
+            console.log(historyData);
             setVictoryData(
                 historyData.map((price) => ({
-                    x: new Date(price.timestamp).getTime(),
+                    x: new Date(price.timestamp),
                     y: price.price,
                 }))
             );
         }
     }, [historyData]);
     return (
-        <Container refreshControl={<RefreshControl />}>
-            {/* {!victoryData ? (
+        <Container>
+            {!victoryData ? (
                 <ActivityIndicator color="white" />
             ) : (
-                <VictoryChart height={Dimensions.get("window").height / 2}>
-                    <VictoryLine
-                        animate
-                        interpolation="monotoneX"
-                        data={victoryData}
-                        style={{ data: { stroke: "#1abc9c" } }}
-                    />
-                    <VictoryScatter
-                        data={victoryData}
-                        style={{ data: { fill: "#1abc9c" } }}
-                    />
-                </VictoryChart>
-            )} */}
-            <FlatList
-                data={victoryData}
-                horizontal={true}
-                renderItem={({ item }) => (
+                <Wrapper>
                     <VictoryChart height={Dimensions.get("window").height / 2}>
                         <VictoryLine
                             animate
                             interpolation="monotoneX"
-                            data={item}
+                            data={victoryData}
                             style={{ data: { stroke: "#1abc9c" } }}
                         />
                         <VictoryScatter
-                            data={item}
+                            data={victoryData}
                             style={{ data: { fill: "#1abc9c" } }}
                         />
                     </VictoryChart>
-                )}
-            />
-            <PickWrapper
-                data={times}
-                ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
-                renderItem={({ item }) => (
-                    <PickTouch onPress={() => setHistoryTime(item)}>
-                        <PickText>{item}</PickText>
-                    </PickTouch>
-                )}
-                horizontal={true}
-                showsHorizontalScrollIndicator={false}
-            />
+                    <PickWrapper
+                        data={times}
+                        ItemSeparatorComponent={() => (
+                            <View style={{ width: 10 }} />
+                        )}
+                        renderItem={({ item }) => (
+                            <PickTouch
+                                onPress={() => {
+                                    setHistoryTime(item);
+                                }}
+                            >
+                                <PickText>{item}</PickText>
+                            </PickTouch>
+                        )}
+                        horizontal={true}
+                        showsHorizontalScrollIndicator={false}
+                    />
+                </Wrapper>
+            )}
+
             {!infoLoading ? (
-                <ContentWrapper>
+                <Wrapper>
                     <CoinInfoTitle>코인 설명</CoinInfoTitle>
                     <Text
                         style={{
@@ -288,7 +273,7 @@ const Detail = ({
                             ? infoData.description
                             : "코인 정보가 없습니다."}
                     </Text>
-                </ContentWrapper>
+                </Wrapper>
             ) : (
                 <ActivityIndicator color="white" />
             )}
@@ -316,3 +301,42 @@ const Detail = ({
 };
 
 export default Detail;
+
+/* <VictoryChart height={Dimensions.get("window").height / 2}>
+                    <VictoryLine
+                        animate
+                        interpolation="monotoneX"
+                        data={victoryData}
+                        style={{ data: { stroke: "#1abc9c" } }}
+                    />
+                    <VictoryScatter
+                        data={victoryData}
+                        style={{ data: { fill: "#1abc9c" } }}
+                    />
+                </VictoryChart> */
+
+// <VictoryChart
+//         width={Dimensions.get("window").width}
+//         height={Dimensions.get("window").height / 2}
+//         scale={{ x: "time", y: "price" }}
+//         containerComponent={
+//             <VictoryZoomContainer
+//                 responsive={false}
+//                 allowZoom={true}
+//                 zoomDimension="x"
+//                 zoomDomain={state}
+//                 onZoomDomainChange={(domain) =>
+//                     setState({ selectedDomain: domain })
+//                 }
+//             />
+//         }
+//     >
+//         <VictoryLine
+//             data={victoryData}
+//             style={{
+//                 data: { stroke: "tomato" },
+//             }}
+//             x="x"
+//             y="y"
+//         />
+//     </VictoryChart>
